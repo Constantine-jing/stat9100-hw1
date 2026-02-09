@@ -3,6 +3,7 @@ import torch.nn as nn
 import torch.nn.functional as F
 import numpy as np
 
+
 class ThetaNet(nn.Module):
     def __init__(self, d_in=50, hidden=128):
         super().__init__()
@@ -137,6 +138,67 @@ plt.xlabel("x"); plt.ylabel("y"); plt.legend()
 plt.savefig("figs/prob1_fit.png", dpi=200, bbox_inches="tight")
 plt.close()
 
+# ----- Bootstrap for parameter uncertainty -----
+B = 100
+
+# fitted mean curve under theta_hat
+x_np = x_grid.cpu().numpy()
+def f_np(x, beta1, gamma1, beta2, gamma2):
+    return beta1*np.exp(-gamma1*x) + beta2*np.exp(-gamma2*x)
+
+y_obs_np = y_obs_raw.cpu().numpy().ravel()
+y_fit = f_np(x_np, *theta_hat)
+
+# residuals from fitted curve
+resid = y_obs_np - y_fit
+
+theta_boot = np.zeros((B, 4))
+yhat_boot  = np.zeros((B, len(x_np)))  # optional: for bands
+
+rng = np.random.default_rng(123)
+
+for b in range(B):
+    # resample residuals with replacement
+    resid_b = rng.choice(resid, size=resid.shape[0], replace=True)
+    y_b = y_fit + resid_b
+
+    # standardize using training y_mean, y_std
+    y_b_t = torch.tensor(y_b, dtype=torch.float32).unsqueeze(0)
+    y_b_z = (y_b_t - y_mean) / y_std
+
+    # predict theta for bootstrap sample
+    net.eval()
+    with torch.no_grad():
+        th_b = net(y_b_z).cpu().numpy().ravel()
+
+    theta_boot[b, :] = th_b
+    yhat_boot[b, :]  = f_np(x_np, *th_b)  # optional
+
+# summaries
+theta_mean = theta_boot.mean(axis=0)
+theta_sd   = theta_boot.std(axis=0, ddof=1)
+theta_ci   = np.quantile(theta_boot, [0.025, 0.975], axis=0)
+
+print("\nBootstrap summary (B=100)")
+names = ["beta1","gamma1","beta2","gamma2"]
+for j, nm in enumerate(names):
+    print(f"{nm:6s}: mean={theta_mean[j]:.3f}, sd={theta_sd[j]:.3f}, "
+          f"CI95=[{theta_ci[0,j]:.3f}, {theta_ci[1,j]:.3f}]")
 
 
+# 90% band for reconstructed response (optional but nice)
+lower = np.quantile(yhat_boot, 0.05, axis=0)
+upper = np.quantile(yhat_boot, 0.95, axis=0)
+
+plt.figure()
+plt.plot(x_np, y_obs_np, "o", label="data y_obs")
+plt.plot(x_np, y_true, "-", linewidth=2, label="true f(x)")
+plt.plot(x_np, y_hat,  "--", linewidth=2, label="estimated f(x)")
+plt.fill_between(x_np, lower, upper, alpha=0.2, label="bootstrap 90% band")
+plt.xlabel("x"); plt.ylabel("y"); plt.legend()
+plt.savefig("figs/prob1_fit_band.png", dpi=200, bbox_inches="tight")
+plt.close()
+
+np.savetxt("results/prob1_theta_boot.csv", theta_boot, delimiter=",",
+           header="beta1,gamma1,beta2,gamma2", comments="")
 

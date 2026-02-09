@@ -8,19 +8,18 @@ output: pdf_document
 ## Instructions
 This homework explores neural estimation and conformal inference for a nonlinear regression model.
 
-```{r setup-check, message=FALSE, warning=FALSE}
-dat <- read.csv("results/sim_example.csv")
-head(dat)
-```
-
-```{r fig-check, echo=FALSE, out.width="60%", fig.align="center"}
-knitr::include_graphics("figs/sim_example.png")
-```
-
-
-
 
 ## Problem 1
+
+
+```{r}
+boot <- read.csv("results/prob1_theta_boot.csv")
+summary(boot)
+apply(boot, 2, sd)
+apply(boot, 2, quantile, probs=c(0.025,0.975))
+
+```
+
 
 ## Problem 2
 
