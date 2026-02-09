@@ -201,4 +201,28 @@ plt.close()
 
 np.savetxt("results/prob1_theta_boot.csv", theta_boot, delimiter=",",
            header="beta1,gamma1,beta2,gamma2", comments="")
+           
+           
+# ----- Save a clean summary table for the report -----
+summary = np.column_stack([
+    theta_hat,                 # point estimate from y_obs
+    theta_mean,                # bootstrap mean
+    theta_sd,                  # bootstrap sd
+    theta_ci[0, :],            # 2.5%
+    theta_ci[1, :]             # 97.5%
+])
+
+np.savetxt(
+    "results/prob1_summary.csv",
+    summary,
+    delimiter=",",
+    header="theta_hat,boot_mean,boot_sd,ci2.5,ci97.5",
+    comments=""
+)
+
+np.savetxt(
+    "results/prob1_param_names.txt",
+    np.array(names),
+    fmt="%s"
+)
 

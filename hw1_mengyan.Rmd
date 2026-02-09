@@ -11,14 +11,40 @@ This homework explores neural estimation and conformal inference for a nonlinear
 
 ## Problem 1
 
+We trained a neural Bayes estimator to map the standardized observation vector $y \in \mathbb{R}^{50}$
+to the parameter vector $\theta=(\beta_1,\gamma_1,\beta_2,\gamma_2)$ using simulated training pairs.
+To quantify uncertainty for the single observed curve, we used a residual bootstrap with 100 resamples.
+
+```{r prob1-table, message=FALSE, warning=FALSE}
+summ <- read.csv("results/prob1_summary.csv")
+param <- scan("results/prob1_param_names.txt", what="character")
+
+out <- data.frame(
+  Parameter = param,
+  Estimate = summ$theta_hat,
+  BootMean = summ$boot_mean,
+  BootSD = summ$boot_sd,
+  CI2.5 = summ$ci2.5,
+  CI97.5 = summ$ci97.5
+)
+
+# round only numeric columns
+out_num <- out
+out_num[,-1] <- round(out_num[,-1], 3)
+
+knitr::kable(out_num, caption = "Neural Bayes estimate and bootstrap uncertainty (B=100).")
+```
+
 
 ```{r}
-boot <- read.csv("results/prob1_theta_boot.csv")
-summary(boot)
-apply(boot, 2, sd)
-apply(boot, 2, quantile, probs=c(0.025,0.975))
+knitr::include_graphics("figs/prob1_fit.png")
 
 ```
+```{r}
+knitr::include_graphics("figs/prob1_fit_band.png")
+
+```
+
 
 
 ## Problem 2

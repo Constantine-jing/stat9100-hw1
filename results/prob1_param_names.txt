@@ -1,0 +1,4 @@
+beta1
+gamma1
+beta2
+gamma2
