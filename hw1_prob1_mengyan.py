@@ -3,7 +3,6 @@ import torch.nn as nn
 import torch.nn.functional as F
 import numpy as np
 
-
 class ThetaNet(nn.Module):
     def __init__(self, d_in=50, hidden=128):
         super().__init__()
@@ -225,4 +224,38 @@ np.savetxt(
     np.array(names),
     fmt="%s"
 )
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
